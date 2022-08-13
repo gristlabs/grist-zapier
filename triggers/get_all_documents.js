@@ -39,7 +39,7 @@ module.exports = {
         type: 'string',
         label: 'Team',
         dynamic: 'get_all_teams.domain',
-        required: false,
+        required: true,
         list: false,
         altersDynamicFields: false,
       },

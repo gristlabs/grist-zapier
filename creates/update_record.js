@@ -37,7 +37,7 @@ const getInputFields = async (z, bundle) => {
   // user.  Don't forget to congigure authentication!
 
   const options = {
-    url: `https://docs.getgrist.com/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`,
+    url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`,
     method: 'GET',
     headers: {
       Accept: 'application/json',

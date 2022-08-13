@@ -42,7 +42,7 @@ module.exports = {
         type: 'string',
         label: 'Team',
         dynamic: 'get_all_teams.domain.name',
-        required: false,
+        required: true,
         list: false,
         altersDynamicFields: false,
       },

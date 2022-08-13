@@ -1,6 +1,6 @@
 const perform = async (z, bundle) => {
   const options = {
-    url: `https://docs.getgrist.com/api/docs/${bundle.inputData.document}/tables/_grist_Tables/data`,
+    url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/_grist_Tables/data`,
     method: 'GET',
     headers: {
       Accept: 'application/json',
@@ -28,9 +28,9 @@ module.exports = {
         type: 'string',
         label: 'Document',
         dynamic: 'get_all_documents.id.name',
-        required: false,
+        required: true,
         list: false,
-        altersDynamicFields: false,
+        altersDynamicFields: true,
       },
     ],
     outputFields: [
