@@ -1,3 +1,5 @@
+const {getApiOptions} = require('../triggers/util');
+
 const perform = async (z, bundle) => {
   const vals = { ...bundle.inputData };
   delete vals.document;
@@ -8,17 +10,11 @@ const perform = async (z, bundle) => {
   for (const k of Object.keys(vals)) {
     vals[k] = [vals[k]];
   }
-  const options = {
-    url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`,
+  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      Authorization: 'Bearer ' + bundle.authData.api_key,
-    },
     params: {},
     body: vals,
-  };
+  });
 
   return z.request(options).then((response) => {
     response.throwForStatus();
@@ -30,20 +26,15 @@ const perform = async (z, bundle) => {
   });
 };
 
-const getInputFields = async (z, bundle) => {
+const inputFields = async (z, bundle) => {
   // Configure a request to an endpoint of your api that
   // returns custom field meta data for the authenticated
   // user.  Don't forget to congigure authentication!
 
-  const options = {
-    url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`,
+  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`, {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${bundle.authData.api_key}`,
-    },
     params: {},
-  };
+  });
 
   return z.request(options).then((response) => {
     response.throwForStatus();
@@ -94,7 +85,7 @@ module.exports = {
         list: false,
         altersDynamicFields: true,
       },
-      getInputFields,
+      inputFields,
     ],
     sample: { id: 16 },
     outputFields: [{ key: 'id', label: 'Row ID', type: 'number' }],
@@ -105,6 +96,5 @@ module.exports = {
     label: 'Create Record',
     description: 'Creates a new Record in a Table',
     hidden: false,
-    important: true,
   },
 };

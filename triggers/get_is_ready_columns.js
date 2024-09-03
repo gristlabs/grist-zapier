@@ -1,12 +1,9 @@
+const {getApiOptions} = require('./util');
+
 const perform = async (z, bundle) => {
-  const options = {
-    url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/columns`,
+  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/columns`, {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${bundle.authData.api_key}`,
-    },
-  };
+  });
 
   return z.request(options).then((response) => {
     response.throwForStatus();
@@ -23,6 +20,7 @@ module.exports = {
       { key: 'id', label: 'ID', type: 'string' },
       { key: 'name', label: 'Name', type: 'string' },
     ],
+    canPaginate: true,
   },
   key: 'get_is_ready_columns',
   noun: 'Column',
@@ -31,6 +29,5 @@ module.exports = {
     description:
       'Get all columns which can contain true/false to indicate if a record is ready for a trigger',
     hidden: true,
-    important: false,
   },
 };

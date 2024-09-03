@@ -1,11 +1,8 @@
+const {getApiOptions} = require('../triggers/util');
+
 const perform = async (z, bundle) => {
-  const options = {
-    url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`,
+  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`, {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${bundle.authData.api_key}`,
-    },
     params: {
       sort: '-id',
       limit: 100,
@@ -13,7 +10,7 @@ const perform = async (z, bundle) => {
         [bundle.inputData.column]: [bundle.inputData.value],
       }),
     },
-  };
+  });
 
   return z.request(options).then((response) => {
     response.throwForStatus();
@@ -73,7 +70,7 @@ module.exports = {
         dynamic: 'get_all_columns.id.name',
         required: true,
         list: false,
-        altersDynamicFields: false,
+        altersDynamicFields: true,
       },
       {
         key: 'value',
@@ -95,6 +92,5 @@ module.exports = {
     label: 'Find Record',
     description: 'Finds a Record in a Table',
     hidden: false,
-    important: true,
   },
 };

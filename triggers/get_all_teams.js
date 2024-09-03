@@ -1,13 +1,10 @@
+const {getApiOptions} = require('./util');
+
 const perform = async (z, bundle) => {
-  const options = {
-    url: 'https://docs.getgrist.com/api/orgs?merged=1',
+  const options = getApiOptions(bundle, `api/orgs?merged=1`, {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${bundle.authData.api_key}`,
-    },
     params: {},
-  };
+  });
 
   return z.request(options).then((response) => {
     response.throwForStatus();
@@ -26,6 +23,7 @@ module.exports = {
       { key: 'domain', label: 'Team Key', type: 'string' },
       { key: 'name', label: 'Team Name', type: 'string' },
     ],
+    canPaginate: true,
   },
   key: 'get_all_teams',
   noun: 'Team',
@@ -33,6 +31,5 @@ module.exports = {
     label: 'Get All Teams',
     description: 'Get all teams for this user',
     hidden: true,
-    important: false,
   },
 };

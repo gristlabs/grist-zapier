@@ -1,3 +1,5 @@
+const {getApiOptions} = require('../triggers/util');
+
 const perform = async (z, bundle) => {
   const vals = { ...bundle.inputData };
   delete vals.document;
@@ -9,17 +11,11 @@ const perform = async (z, bundle) => {
     vals[k] = [vals[k]];
   }
   vals.id = [parseInt(bundle.inputData.record, 10)];
-  const options = {
-    url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`,
+  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      Authorization: 'Bearer ' + bundle.authData.api_key,
-    },
     params: {},
     body: vals,
-  };
+  });
 
   return z.request(options).then((response) => {
     response.throwForStatus();
@@ -31,20 +27,15 @@ const perform = async (z, bundle) => {
   });
 };
 
-const getInputFields = async (z, bundle) => {
+const inputFields = async (z, bundle) => {
   // Configure a request to an endpoint of your api that
   // returns custom field meta data for the authenticated
   // user.  Don't forget to congigure authentication!
 
-  const options = {
-    url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`,
+  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`, {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${bundle.authData.api_key}`,
-    },
     params: {},
-  };
+  });
 
   return z.request(options).then((response) => {
     response.throwForStatus();
@@ -103,9 +94,9 @@ module.exports = {
         search: 'find_record.id',
         required: true,
         list: false,
-        altersDynamicFields: false,
+        altersDynamicFields: true,
       },
-      getInputFields,
+      inputFields,
     ],
     sample: { id: 16 },
     outputFields: [{ key: 'id', label: 'ID', type: 'number' }],
@@ -116,6 +107,5 @@ module.exports = {
     label: 'Update Record',
     description: 'Update an existing Record in a Grist table',
     hidden: false,
-    important: true,
   },
 };

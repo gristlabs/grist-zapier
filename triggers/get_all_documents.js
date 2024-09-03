@@ -1,15 +1,12 @@
+const {getApiOptions} = require('./util');
+
 const perform = async (z, bundle) => {
-  const options = {
-    url: `https://${bundle.inputData.team}.getgrist.com/api/orgs/current/workspaces`,
+  const options = getApiOptions(bundle, 'api/orgs/current/workspaces', {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${bundle.authData.api_key}`,
-    },
     params: {
       includeSupport: '',
     },
-  };
+  });
 
   return z.request(options).then((response) => {
     response.throwForStatus();
@@ -41,13 +38,14 @@ module.exports = {
         dynamic: 'get_all_teams.domain',
         required: true,
         list: false,
-        altersDynamicFields: false,
+        altersDynamicFields: true,
       },
     ],
     outputFields: [
       { key: 'name', label: 'Document Name', type: 'string' },
       { key: 'id', label: 'Document ID', type: 'string' },
     ],
+    canPaginate: true,
   },
   key: 'get_all_documents',
   noun: 'Document',
@@ -55,6 +53,5 @@ module.exports = {
     label: 'Get All Documents',
     description: 'Get all documents for this user',
     hidden: true,
-    important: false,
   },
 };
