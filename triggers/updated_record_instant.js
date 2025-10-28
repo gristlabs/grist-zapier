@@ -1,44 +1,20 @@
+const {getApiOptions} = require('./util');
+
 const perform = async (z, bundle) => {
   return [...bundle.cleanedRequest];
 };
 
-const performList = async (z, bundle) => {
-  const options = {
-    url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/records`,
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${bundle.authData.api_key}`,
-    },
-    params: {
-      sort: '-id',
-      limit: 10,
-    },
-  };
-
-  return z.request(options).then((response) => {
-    response.throwForStatus();
-    return response.json.records.map(({ id, fields }) =>
-      Object.assign({ id }, fields)
-    );
-  });
-};
-
 const performSubscribe = async (z, bundle) => {
-  return z
-    .request({
-      url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/_subscribe`,
+  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/_subscribe`, {
       method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${bundle.authData.api_key}`,
-      },
       body: {
         url: bundle.targetUrl,
         eventTypes: ['add', 'update'],
         isReadyColumn: bundle.inputData.is_ready_column || undefined,
       },
-    })
+  });
+
+  return z.request(options)
     .then((response) => {
       response.throwForStatus();
       return response.json;
@@ -46,20 +22,32 @@ const performSubscribe = async (z, bundle) => {
 };
 
 const performUnsubscribe = async (z, bundle) => {
-  return z
-    .request({
-      url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/_unsubscribe`,
+  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/_unsubscribe`, {
       method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${bundle.authData.api_key}`,
-      },
       body: bundle.subscribeData,
-    })
+  });
+  return z.request(options)
     .then((response) => {
       response.throwForStatus();
       return response.json;
     });
+};
+
+const performList = async (z, bundle) => {
+  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/records`, {
+    method: 'GET',
+    params: {
+      sort: '-id',
+      limit: 10,
+    },
+  });
+
+  return z.request(options).then((response) => {
+    response.throwForStatus();
+    return response.json.records.map(({ id, fields }) =>
+      Object.assign({ id }, fields)
+    );
+  });
 };
 
 module.exports = {
@@ -102,7 +90,7 @@ module.exports = {
           'A toggle (boolean) column which is `True` when the record is *ready*. When a record is created or updated, the trigger will be activated if and only if the record is ready. For example, if you only want to activate a trigger when both `Name` and `Email` are not empty, your readiness column can have the following formula:\n\n    bool($Name and $Email)\n\nIf any change to a record should always activate the trigger, leave this field blank.',
         required: false,
         list: false,
-        altersDynamicFields: false,
+        altersDynamicFields: true,
       },
     ],
     type: 'hook',
@@ -118,6 +106,5 @@ module.exports = {
     label: 'New or Updated Record (Instant)',
     description: 'Triggers when a Record is updated, or a new Record is added.',
     hidden: false,
-    important: true,
   },
 };

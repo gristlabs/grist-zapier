@@ -1,13 +1,10 @@
+const {getApiOptions} = require('./util');
+
 const perform = async (z, bundle) => {
-  const options = {
-    url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/_grist_Tables/data`,
+  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/_grist_Tables/data`, {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${bundle.authData.api_key}`,
-    },
     params: {},
-  };
+  });
 
   return z.request(options).then((response) => {
     response.throwForStatus();
@@ -37,6 +34,7 @@ module.exports = {
       { key: 'name', label: 'Table Name', type: 'string' },
       { key: 'id', label: 'Table ID', type: 'string' },
     ],
+    canPaginate: true,
   },
   key: 'get_all_tables',
   noun: 'Table',
@@ -44,6 +42,5 @@ module.exports = {
     label: 'Get All Tables',
     description: 'This gets all tables in a document.',
     hidden: true,
-    important: false,
   },
 };

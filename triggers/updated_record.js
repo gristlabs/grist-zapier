@@ -1,16 +1,13 @@
+const {getApiOptions} = require('./util');
+
 const perform = async (z, bundle) => {
-  const options = {
-    url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`,
+  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`, {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${bundle.authData.api_key}`,
-    },
     params: {
       sort: bundle.inputData.date ? '-' + bundle.inputData.date : '-id',
       limit: 100,
     },
-  };
+  });
 
   return z.request(options).then((response) => {
     response.throwForStatus();
@@ -75,7 +72,7 @@ module.exports = {
         dynamic: 'get_all_columns.id.name',
         required: false,
         list: false,
-        altersDynamicFields: false,
+        altersDynamicFields: true,
       },
     ],
     sample: { id: 53759 },
@@ -87,6 +84,5 @@ module.exports = {
     label: 'New or Updated Record',
     description: 'Triggers when a Record is updated, or a new Record is added.',
     hidden: false,
-    important: false,
   },
 };

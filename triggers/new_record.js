@@ -1,16 +1,13 @@
+const {getApiOptions} = require('./util');
+
 const perform = async (z, bundle) => {
-  const options = {
-    url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`,
+  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`, {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${bundle.authData.api_key}`,
-    },
     params: {
       sort: '-id',
       limit: 100,
     },
-  };
+  });
 
   return z.request(options).then((response) => {
     response.throwForStatus();
@@ -43,7 +40,7 @@ module.exports = {
         dynamic: 'get_all_teams.domain.name',
         required: true,
         list: false,
-        altersDynamicFields: false,
+        altersDynamicFields: true,
       },
       {
         key: 'document',
@@ -52,7 +49,7 @@ module.exports = {
         dynamic: 'get_all_documents.id.name',
         required: true,
         list: false,
-        altersDynamicFields: false,
+        altersDynamicFields: true,
       },
       {
         key: 'table',
@@ -61,11 +58,12 @@ module.exports = {
         dynamic: 'get_all_tables.id.name',
         required: true,
         list: false,
-        altersDynamicFields: false,
+        altersDynamicFields: true,
       },
     ],
     outputFields: [{ key: 'id', label: 'Row ID', type: 'integer' }],
     sample: { id: 53759 },
+    canPaginate: true,
   },
   key: 'new_record',
   noun: 'Record',
@@ -73,6 +71,5 @@ module.exports = {
     label: 'New Record',
     description: 'Triggers when a new Record is created.',
     hidden: false,
-    important: false,
   },
 };

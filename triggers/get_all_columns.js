@@ -1,15 +1,12 @@
+const {getApiOptions} = require('./util');
+
 const perform = async (z, bundle) => {
-  const options = {
-    url: `https://${bundle.inputData.team}.getgrist.com/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`,
+  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`, {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${bundle.authData.api_key}`,
-    },
     params: {
       limit: 1,
     },
-  };
+  });
 
   return z.request(options).then((response) => {
     response.throwForStatus();
@@ -44,7 +41,7 @@ module.exports = {
         dynamic: 'get_all_teams.domain.name',
         required: true,
         list: false,
-        altersDynamicFields: false,
+        altersDynamicFields: true,
       },
       {
         key: 'document',
@@ -53,7 +50,7 @@ module.exports = {
         dynamic: 'get_all_documents.id.name',
         required: false,
         list: false,
-        altersDynamicFields: false,
+        altersDynamicFields: true,
       },
       {
         key: 'table',
@@ -62,13 +59,14 @@ module.exports = {
         dynamic: 'get_all_tables.id.name',
         required: false,
         list: false,
-        altersDynamicFields: false,
+        altersDynamicFields: true,
       },
     ],
     outputFields: [
       { key: 'id', label: 'ID', type: 'string' },
       { key: 'name', label: 'Name', type: 'string' },
     ],
+    canPaginate: true,
   },
   key: 'get_all_columns',
   noun: 'Column',
@@ -76,6 +74,5 @@ module.exports = {
     label: 'Get All Columns',
     description: 'Get all Columns in a Table',
     hidden: true,
-    important: false,
   },
 };

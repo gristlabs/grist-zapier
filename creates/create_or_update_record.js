@@ -1,3 +1,5 @@
+const {getApiOptions} = require('../triggers/util');
+
 const perform = async (z, bundle) => {
   const { inputData, authData } = bundle;
 
@@ -19,18 +21,12 @@ const perform = async (z, bundle) => {
     }
   }
 
-  const { team, document, table } = inputData;
-  const options = {
-    url: `https://${team}.getgrist.com/api/docs/${document}/tables/${table}/records`,
+  const { document, table } = inputData;
+  const options = getApiOptions(bundle, `api/docs/${document}/tables/${table}/records`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      Authorization: 'Bearer ' + authData.api_key,
-    },
     params: {},
     body: { records: [record] },
-  };
+  });
 
   return z.request(options).then((response) => {
     response.throwForStatus();
@@ -38,18 +34,13 @@ const perform = async (z, bundle) => {
   });
 };
 
-const getInputFields = async (z, bundle) => {
+const inputFields = async (z, bundle) => {
   const { inputData, authData } = bundle;
-  const { team, document, table, matchFields } = inputData;
-  const options = {
-    url: `https://${team}.getgrist.com/api/docs/${document}/tables/${table}/columns`,
+  const { document, table, matchFields } = inputData;
+  const options = getApiOptions(bundle, `api/docs/${document}/tables/${table}/columns`, {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: 'Bearer ' + authData.api_key,
-    },
     params: {},
-  };
+  });
 
   return z.request(options).then((response) => {
     response.throwForStatus();
@@ -116,7 +107,7 @@ module.exports = {
         list: true,
         altersDynamicFields: true,
       },
-      getInputFields,
+      inputFields,
     ],
     outputFields: [{ key: 'success' }],
     sample: { success: 'ok' },
@@ -128,6 +119,5 @@ module.exports = {
     description:
       'Creates a new Record in a Table, or Updates an existing matching Record',
     hidden: false,
-    important: true,
   },
 };
