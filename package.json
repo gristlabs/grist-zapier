@@ -4,7 +4,8 @@
   "description": "Grist combines the flexibility of a spreadsheet with the robustness of a database to organize your data, your way.",
   "main": "index.js",
   "scripts": {
-    "test": "jest --testTimeout 10000"
+    "start:grist": "docker run --rm --name grist-for-zapier -v $PWD/fixtures:/persist -p 8080:8484 -it gristlabs/grist",
+    "test": "TEST_GRIST_API_KEY=d36010f168a08018434807a34d1f43eb9b0d1de3 TEST_GRIST_DOC_ID=12Ah5NX72AnycZHEmq491Q jest --testTimeout 10000"
   },
   "engines": {
     "node": ">=v18",
