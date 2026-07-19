@@ -1,25 +1,33 @@
 {
   "name": "grist",
-  "version": "1.2.3",
-  "description": "Grist combines the flexibility of a spreadsheet with the robustness of a database to organize your data, your way.",
+  "version": "2.0.0",
+  "description": "Grist is a modern spreadsheet-database and app platform.",
   "main": "index.js",
   "scripts": {
-    "start:grist": "docker run --rm --name grist-for-zapier -v $PWD/fixtures:/persist -p 8080:8484 -it gristlabs/grist",
-    "test": "TEST_GRIST_API_KEY=d36010f168a08018434807a34d1f43eb9b0d1de3 TEST_GRIST_DOC_ID=12Ah5NX72AnycZHEmq491Q jest --testTimeout 10000"
+    "start:grist": "docker run --rm --name grist-for-zapier -v $PWD/fixtures:/persist -p 8080:8484 -e ALLOWED_WEBHOOK_DOMAINS=* -it gristlabs/grist",
+    "test": "TEST_GRIST_API_KEY=d36010f168a08018434807a34d1f43eb9b0d1de3 TEST_GRIST_DOC_ID=12Ah5NX72AnycZHEmq491Q GRIST_ZAPIER_AUTH=apikey jest --testTimeout 10000",
+    "validate": "npm run validate:oauth && npm run validate:apikey",
+    "validate:oauth": "GRIST_ZAPIER_AUTH=oauth zapier-platform validate",
+    "validate:apikey": "GRIST_ZAPIER_AUTH=apikey zapier-platform validate",
+    "push": "node scripts/select-app && zapier-platform push && node scripts/ensure-env",
+    "push:oauth": "GRIST_ZAPIER_AUTH=oauth npm run push",
+    "push:apikey": "GRIST_ZAPIER_AUTH=apikey npm run push",
+    "zapier-platform:oauth": "GRIST_ZAPIER_AUTH=oauth node scripts/select-app && zapier-platform",
+    "zapier-platform:apikey": "GRIST_ZAPIER_AUTH=apikey node scripts/select-app && zapier-platform"
   },
   "engines": {
-    "node": ">=v18",
-    "npm": ">=5.6.0"
+    "node": ">=22"
   },
   "dependencies": {
-    "zapier-platform-core": "15.5.1"
+    "zapier-platform-core": "19.0.0"
   },
   "devDependencies": {
-    "jest": "^29.6.0",
-    "zapier-platform-cli": "^15.14.0"
+    "jest": "^30.4.2",
+    "nock": "^14.0.15",
+    "zapier-platform-cli": "^19.0.0"
   },
   "private": true,
   "zapier": {
-    "convertedByCLIVersion": "15.14.0"
+    "convertedByCLIVersion": "19.0.0"
   }
 }
