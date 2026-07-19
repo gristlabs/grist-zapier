@@ -1,41 +1,23 @@
-const {getApiOptions} = require('./util');
-
 const perform = async (z, bundle) => {
-  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`, {
+  const dateCol = bundle.inputData.date;
+  const response = await z.request({
+    url: `/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/records`,
     method: 'GET',
-    params: {
-      sort: bundle.inputData.date ? '-' + bundle.inputData.date : '-id',
-      limit: 100,
-    },
+    params: { sort: dateCol ? '-' + dateCol : '-id', limit: 100 },
   });
-
-  return z.request(options).then((response) => {
-    response.throwForStatus();
-    const results = response.json;
-
-    // You can do any parsing you need for results here before returning them
-    const ids = results.id;
-    const recs = [];
-    const keys = Object.keys(results);
-    for (let i = 0; i < ids.length; i++) {
-      const rec = { id: ids[i] };
-      for (const key of keys) {
-        if (key === 'manualSort') continue;
-        rec[key] = results[key][i];
-      }
-      if (bundle.inputData.date) {
-        rec.originalId = rec.id;
-        rec.id = `${rec.id}-${rec[bundle.inputData.date]}`;
-      }
-      recs.push(rec);
+  return response.data.records.map(({ id, fields }) => {
+    const rec = { id, ...fields };
+    if (dateCol) {
+      rec.originalId = id;
+      rec.id = `${id}-${fields[dateCol]}`;
     }
-    return recs;
+    return rec;
   });
 };
 
 module.exports = {
   operation: {
-    perform: perform,
+    perform,
     inputFields: [
       {
         key: 'team',
@@ -82,7 +64,7 @@ module.exports = {
   noun: 'Record',
   display: {
     label: 'New or Updated Record',
-    description: 'Triggers when a Record is updated, or a new Record is added.',
+    description: 'Triggers when a record is created or updated.',
     hidden: false,
   },
 };

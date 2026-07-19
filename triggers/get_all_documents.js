@@ -1,35 +1,21 @@
-const {getApiOptions} = require('./util');
-
 const perform = async (z, bundle) => {
-  const options = getApiOptions(bundle, 'api/orgs/current/workspaces', {
+  const response = await z.request({
+    url: '/api/orgs/current/workspaces',
     method: 'GET',
-    params: {
-      includeSupport: '',
-    },
+    params: { includeSupport: '' },
   });
-
-  return z.request(options).then((response) => {
-    response.throwForStatus();
-    const results = response.json;
-
-    // You can do any parsing you need for results here before returning them
-
-    const flat = [].concat.apply(
-      [],
-      results.map((r) =>
-        r.docs.map((d) => ({
-          ...d,
-          name: d.name + (r.name !== 'Home' ? ` (${r.name})` : ''),
-        }))
-      )
-    );
-    return flat;
-  });
+  const workspaces = response.data;
+  return workspaces.flatMap((ws) =>
+    ws.docs.map((doc) => ({
+      ...doc,
+      name: doc.name + (ws.name !== 'Home' ? ` (${ws.name})` : ''),
+    }))
+  );
 };
 
 module.exports = {
   operation: {
-    perform: perform,
+    perform,
     inputFields: [
       {
         key: 'team',

@@ -1,24 +1,17 @@
-const zapier = require('zapier-platform-core');
-
-// Use this to make test calls into your app:
-const App = require('../../index');
-const appTester = zapier.createAppTester(App);
-// read the `.env` file into the environment, if available
-zapier.tools.env.inject();
+const { App, appTester, authData } = require('../helpers');
 
 describe('triggers.get_all_columns', () => {
-  it('should run', async () => {
+  it('returns the table\'s user columns, filtering out manualSort and helpers', async () => {
     const bundle = {
-      authData: { hostname: 'localhost:8080', protocol: 'http', api_key: process.env.TEST_GRIST_API_KEY},
+      authData,
       inputData: { team: 'docs', document: process.env.TEST_GRIST_DOC_ID, table: 'Contacts' },
     };
 
-    const results = await appTester(
-      App.triggers['get_all_columns'].operation.perform,
-      bundle
-    );
-    expect(results).toBeDefined();
-    expect(results).toEqual(expect.arrayContaining([expect.objectContaining({ id: "Phone" })]));
-    // TODO: add more assertions
+    const results = await appTester(App.triggers['get_all_columns'].operation.perform, bundle);
+    expect(Array.isArray(results)).toBe(true);
+    const ids = results.map((r) => r.id);
+    expect(ids).toEqual(expect.arrayContaining(['Phone', 'Email', 'First_Name', 'Last_Name']));
+    expect(ids).not.toContain('manualSort');
+    expect(ids.some((id) => id.startsWith('gristHelper_'))).toBe(false);
   });
 });

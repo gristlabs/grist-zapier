@@ -1,23 +1,14 @@
-const zapier = require('zapier-platform-core');
-
-// Use this to make test calls into your app:
-const App = require('../../index');
-const appTester = zapier.createAppTester(App);
-// read the `.env` file into the environment, if available
-zapier.tools.env.inject();
+const { App, appTester, authData } = require('../helpers');
 
 describe('triggers.get_all_teams', () => {
-  it('should run', async () => {
+  it('returns the user\'s teams including "docs"', async () => {
     const bundle = {
-      authData: { hostname: 'localhost:8080', protocol: 'http', api_key: process.env.TEST_GRIST_API_KEY},
+      authData,
       inputData: {},
     };
 
-    const results = await appTester(
-      App.triggers['get_all_teams'].operation.perform,
-      bundle
-    );
-    expect(results).toBeDefined();
-    // TODO: add more assertions
+    const results = await appTester(App.triggers['get_all_teams'].operation.perform, bundle);
+    expect(Array.isArray(results)).toBe(true);
+    expect(results).toContainEqual(expect.objectContaining({ domain: 'docs' }));
   });
 });

@@ -1,4 +1,6 @@
 const authentication = require('./authentication');
+const { addBearerAuth, buildUrl } = require('./lib/middleware');
+
 const newRecordTrigger = require('./triggers/new_record.js');
 const getAllDocumentsTrigger = require('./triggers/get_all_documents.js');
 const getAllTeamsTrigger = require('./triggers/get_all_teams.js');
@@ -16,7 +18,8 @@ const findRecordSearch = require('./searches/find_record.js');
 module.exports = {
   version: require('./package.json').version,
   platformVersion: require('zapier-platform-core').version,
-  authentication: authentication,
+  authentication,
+  beforeRequest: [addBearerAuth, buildUrl],
   creates: {
     [createRecordCreate.key]: createRecordCreate,
     [updateRecordCreate.key]: updateRecordCreate,
@@ -38,12 +41,14 @@ module.exports = {
     find_record: {
       key: 'find_record',
       display: {
-        label: 'Find or Create Records',
-        description: 'Finds a Record in a Table',
+        label: 'Find or Create Record',
+        description: 'Finds a record in a table, or creates it if not found.',
       },
       search: 'find_record',
       create: 'create_record',
     },
   },
-  flags: { skipThrowForStatus: true },
+  flags: {
+    cleanInputData: false,
+  },
 };

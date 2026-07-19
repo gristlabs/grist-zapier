@@ -1,23 +1,17 @@
-const zapier = require('zapier-platform-core');
-
-// Use this to make test calls into your app:
-const App = require('../../index');
-const appTester = zapier.createAppTester(App);
-// read the `.env` file into the environment, if available
-zapier.tools.env.inject();
+const { App, appTester, authData } = require('../helpers');
 
 describe('triggers.updated_record', () => {
-  it('should run', async () => {
+  it('returns rows with numeric id when no date column is configured', async () => {
     const bundle = {
-      authData: { hostname: 'localhost:8080', protocol: 'http', api_key: process.env.TEST_GRIST_API_KEY},
+      authData,
       inputData: { team: 'docs', document: process.env.TEST_GRIST_DOC_ID, table: 'Contacts' },
     };
 
-    const results = await appTester(
-      App.triggers['updated_record'].operation.perform,
-      bundle
-    );
-    expect(results).toBeDefined();
-    // TODO: add more assertions
+    const results = await appTester(App.triggers['updated_record'].operation.perform, bundle);
+    expect(Array.isArray(results)).toBe(true);
+    expect(results.length).toBeGreaterThan(0);
+    expect(typeof results[0].id).toBe('number');
+    expect(results[0]).toHaveProperty('Email');
+    expect(results[0]).not.toHaveProperty('originalId');
   });
 });

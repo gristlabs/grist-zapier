@@ -1,63 +1,19 @@
-const {getApiOptions} = require('../triggers/util');
+const { columnInputFields } = require('../lib/columns');
+const { pickFields } = require('../lib/records');
 
 const perform = async (z, bundle) => {
-  const vals = { ...bundle.inputData };
-  delete vals.document;
-  delete vals.team;
-  delete vals.table;
-  delete vals.record;
-  delete vals.column;
-  for (const k of Object.keys(vals)) {
-    vals[k] = [vals[k]];
-  }
-  vals.id = [parseInt(bundle.inputData.record, 10)];
-  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`, {
+  const id = parseInt(bundle.inputData.record, 10);
+  await z.request({
+    url: `/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/records`,
     method: 'PATCH',
-    params: {},
-    body: vals,
+    body: { records: [{ id, fields: pickFields(bundle.inputData) }] },
   });
-
-  return z.request(options).then((response) => {
-    response.throwForStatus();
-    const results = response.json;
-
-    // You can do any parsing you need for results here before returning them
-
-    return { id: vals.id };
-  });
-};
-
-const inputFields = async (z, bundle) => {
-  // Configure a request to an endpoint of your api that
-  // returns custom field meta data for the authenticated
-  // user.  Don't forget to congigure authentication!
-
-  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`, {
-    method: 'GET',
-    params: {},
-  });
-
-  return z.request(options).then((response) => {
-    response.throwForStatus();
-    const results = response.json;
-
-    // modify your api response to return an array of Field objects
-    // see https://github.com/zapier/zapier-platform/blob/master/packages/schema/docs/build/schema.md#fieldschema
-    // for schema definition.
-
-    const keys = Object.keys(results);
-    return keys
-      .filter((key) => key !== 'id' && key !== 'manualSort')
-      .map((key) => ({
-        key: key,
-        label: key,
-      }));
-  });
+  return { id };
 };
 
 module.exports = {
   operation: {
-    perform: perform,
+    perform,
     inputFields: [
       {
         key: 'team',
@@ -96,7 +52,7 @@ module.exports = {
         list: false,
         altersDynamicFields: true,
       },
-      inputFields,
+      columnInputFields,
     ],
     sample: { id: 16 },
     outputFields: [{ key: 'id', label: 'ID', type: 'number' }],
@@ -105,7 +61,7 @@ module.exports = {
   noun: 'Record',
   display: {
     label: 'Update Record',
-    description: 'Update an existing Record in a Grist table',
+    description: 'Updates an existing record.',
     hidden: false,
   },
 };

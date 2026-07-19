@@ -1,24 +1,14 @@
-const {getApiOptions} = require('./util');
-
 const perform = async (z, bundle) => {
-  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/_grist_Tables/data`, {
+  const response = await z.request({
+    url: `/api/docs/${bundle.inputData.document}/tables`,
     method: 'GET',
-    params: {},
   });
-
-  return z.request(options).then((response) => {
-    response.throwForStatus();
-    const results = response.json;
-
-    // You can do any parsing you need for results here before returning them
-
-    return results.tableId.map((t) => ({ id: t, name: `${t} table` }));
-  });
+  return response.data.tables.map((t) => ({ id: t.id, name: t.id }));
 };
 
 module.exports = {
   operation: {
-    perform: perform,
+    perform,
     inputFields: [
       {
         key: 'document',
