@@ -49,6 +49,8 @@ module.exports = {
     },
   },
   flags: {
+    // Zapier recommends this, so that mapped-but-empty values (e.g. null or "") don't get
+    // ignored. See https://docs.zapier.com/integrations/build-cli/empty-values-in-input-data.
     cleanInputData: false,
   },
 };

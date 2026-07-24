@@ -27,6 +27,10 @@ Selected at push time via `GRIST_ZAPIER_AUTH=oauth|apikey`. See
 - Column dropdowns now show `Label ($colId)` when label and colId
   differ.
 - `update_record` returns `{id: number}` instead of `{id: [number]}`.
+- Empty values mapped to record fields are now written to Grist (clearing
+  the target cell) instead of being dropped, per [Zapier's
+  recommendation](https://docs.zapier.com/integrations/build-cli/empty-values-in-input-data)
+  to disable `cleanInputData`.
 
 ### Operator note
 
