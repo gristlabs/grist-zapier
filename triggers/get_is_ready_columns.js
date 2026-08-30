@@ -1,21 +1,15 @@
-const {getApiOptions} = require('./util');
+const { colName, fetchColumns } = require('../lib/columns');
 
 const perform = async (z, bundle) => {
-  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/columns`, {
-    method: 'GET',
-  });
-
-  return z.request(options).then((response) => {
-    response.throwForStatus();
-    return response.json.columns
-      .filter((col) => ['Any', 'Bool'].includes(col.fields.type))
-      .map((col) => ({ id: col.id, name: col.fields.label }));
-  });
+  const columns = await fetchColumns(z, bundle);
+  return columns
+    .filter((col) => ['Any', 'Bool'].includes(col.fields.type))
+    .map((col) => ({ id: col.id, name: colName(col) }));
 };
 
 module.exports = {
   operation: {
-    perform: perform,
+    perform,
     outputFields: [
       { key: 'id', label: 'ID', type: 'string' },
       { key: 'name', label: 'Name', type: 'string' },

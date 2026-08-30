@@ -1,57 +1,8 @@
-const {getApiOptions} = require('./util');
-
-const perform = async (z, bundle) => {
-  return [...bundle.cleanedRequest];
-};
-
-const performSubscribe = async (z, bundle) => {
-  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/_subscribe`, {
-      method: 'POST',
-      body: {
-        url: bundle.targetUrl,
-        eventTypes: ['add'],
-        isReadyColumn: bundle.inputData.is_ready_column || undefined,
-      },
-  });
-
-  return z.request(options)
-    .then((response) => {
-      response.throwForStatus();
-      return response.json;
-    });
-};
-
-const performUnsubscribe = async (z, bundle) => {
-  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/_subscribe`, {
-      method: 'POST',
-      body: bundle.subscribeData,
-  });
-  return z.request(options)
-    .then((response) => {
-      response.throwForStatus();
-      return response.json;
-    });
-};
-
-const performList = async (z, bundle) => {
-  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/records`, {
-    method: 'GET',
-    params: {
-      sort: '-id',
-      limit: 10,
-    },
-  });
-  return z.request(options).then((response) => {
-    response.throwForStatus();
-    return response.json.records.map(({ id, fields }) =>
-      Object.assign({ id }, fields)
-    );
-  });
-};
+const { hookOperation } = require('../lib/webhooks');
 
 module.exports = {
   operation: {
-    perform: perform,
+    ...hookOperation(['add']),
     inputFields: [
       {
         key: 'team',
@@ -93,9 +44,6 @@ module.exports = {
       },
     ],
     type: 'hook',
-    performSubscribe: performSubscribe,
-    performUnsubscribe: performUnsubscribe,
-    performList: performList,
     sample: { id: 53759 },
     outputFields: [{ key: 'id', label: 'Row ID', type: 'integer' }],
   },
@@ -103,7 +51,7 @@ module.exports = {
   noun: 'Record',
   display: {
     label: 'New Record (Instant)',
-    description: 'Triggers when a new Record is created',
+    description: 'Triggers when a new record is created.',
     hidden: false,
   },
 };

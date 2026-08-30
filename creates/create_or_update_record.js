@@ -1,12 +1,9 @@
-const {getApiOptions} = require('../triggers/util');
+const { colName, isWritable, fetchColumns } = require('../lib/columns');
 
 const perform = async (z, bundle) => {
-  const { inputData, authData } = bundle;
+  const { inputData } = bundle;
 
-  const record = {
-    require: {},
-    fields: {},
-  };
+  const record = { require: {}, fields: {} };
   for (const inputKey of Object.keys(inputData)) {
     for (const recordKey of Object.keys(record)) {
       const prefix = recordKey + '.';
@@ -22,52 +19,35 @@ const perform = async (z, bundle) => {
   }
 
   const { document, table } = inputData;
-  const options = getApiOptions(bundle, `api/docs/${document}/tables/${table}/records`, {
+  await z.request({
+    url: `/api/docs/${document}/tables/${table}/records`,
     method: 'PUT',
-    params: {},
     body: { records: [record] },
   });
-
-  return z.request(options).then((response) => {
-    response.throwForStatus();
-    return { status: 'ok' };
-  });
+  return { status: 'ok' };
 };
 
 const inputFields = async (z, bundle) => {
-  const { inputData, authData } = bundle;
-  const { document, table, matchFields } = inputData;
-  const options = getApiOptions(bundle, `api/docs/${document}/tables/${table}/columns`, {
-    method: 'GET',
-    params: {},
-  });
-
-  return z.request(options).then((response) => {
-    response.throwForStatus();
-    const colLabels = new Map(
-      response.json.columns.map((c) => [c.id, c.fields.label])
-    );
-    return [
-      ...matchFields.map((colId) => ({
-        key: 'require.' + colId,
-        label:
-          'Find records (or create if not found) where ' +
-          colLabels.get(colId) +
-          ' is',
+  const { matchFields } = bundle.inputData;
+  const columns = await fetchColumns(z, bundle);
+  const nameById = new Map(columns.map((c) => [c.id, colName(c)]));
+  return [
+    ...matchFields.map((colId) => ({
+      key: 'require.' + colId,
+      label: `Find records (or create if not found) where ${nameById.get(colId) ?? colId} is`,
+    })),
+    ...columns
+      .filter(isWritable)
+      .map((col) => ({
+        key: 'fields.' + col.id,
+        label: `Set ${colName(col)} to`,
       })),
-      ...response.json.columns
-        .filter((col) => !(col.fields.isFormula && col.fields.formula))
-        .map((col) => ({
-          key: 'fields.' + col.id,
-          label: 'Set ' + col.fields.label + ' to',
-        })),
-    ];
-  });
+  ];
 };
 
 module.exports = {
   operation: {
-    perform: perform,
+    perform,
     inputFields: [
       {
         key: 'team',
@@ -117,7 +97,7 @@ module.exports = {
   display: {
     label: 'Create or Update Record',
     description:
-      'Creates a new Record in a Table, or Updates an existing matching Record',
+      'Creates a new record in a table, or updates an existing matching record.',
     hidden: false,
   },
 };

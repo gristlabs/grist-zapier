@@ -1,24 +1,35 @@
-const zapier = require('zapier-platform-core');
+const { App, appTester, authData, target, listWebhooks } = require('../helpers');
 
-// Use this to make test calls into your app:
-const App = require('../../index');
-const appTester = zapier.createAppTester(App);
-// read the `.env` file into the environment, if available
-zapier.tools.env.inject();
+const op = App.triggers['updated_record_instant'].operation;
 
 describe('triggers.updated_record_instant', () => {
-  it('should run', async () => {
-    const bundle = {
-      authData: { hostname: 'localhost:8080', protocol: 'http', api_key: process.env.TEST_GRIST_API_KEY},
-      inputData: { team: 'docs', document: process.env.TEST_GRIST_DOC_ID, table: 'Contacts' },
-      cleanedRequest: [{id: 5}],
-    };
+  it('perform passes through cleanedRequest', async () => {
+    const bundle = { authData, inputData: target, cleanedRequest: [{ id: 5 }] };
+    const results = await appTester(op.perform, bundle);
+    expect(results).toEqual([{ id: 5 }]);
+  });
 
-    const results = await appTester(
-      App.triggers['updated_record_instant'].operation.perform,
-      bundle
-    );
-    expect(results).toBeDefined();
-    // TODO: add more assertions
+  it('subscribe registers a webhook for add+update; unsubscribe removes it', async () => {
+    const url = `https://example.com/zapier-test-${Date.now()}`;
+    const sub = await appTester(op.performSubscribe, { authData, inputData: target, targetUrl: url });
+    expect(sub.webhookId).toEqual(expect.any(String));
+
+    const after = await listWebhooks();
+    const registered = after.find((w) => w.id === sub.webhookId);
+    expect(registered).toBeDefined();
+    expect(registered.fields.eventTypes).toEqual(expect.arrayContaining(['add', 'update']));
+
+    await appTester(op.performUnsubscribe, { authData, inputData: target, subscribeData: sub });
+
+    const final = await listWebhooks();
+    expect(final.find((w) => w.id === sub.webhookId)).toBeUndefined();
+  });
+
+  it('performList returns recent records', async () => {
+    const results = await appTester(op.performList, { authData, inputData: target });
+    expect(Array.isArray(results)).toBe(true);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0]).toHaveProperty('id');
+    expect(results[0]).toHaveProperty('Email');
   });
 });

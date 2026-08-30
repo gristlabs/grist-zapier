@@ -1,23 +1,21 @@
-const zapier = require('zapier-platform-core');
-
-// Use this to make test calls into your app:
-const App = require('../../index');
-const appTester = zapier.createAppTester(App);
-// read the `.env` file into the environment, if available
-zapier.tools.env.inject();
+const { App, appTester, authData } = require('../helpers');
 
 describe('triggers.get_is_ready_columns', () => {
-  it('should run', async () => {
+  it('returns only columns of type Any or Bool, in {id, name} shape', async () => {
     const bundle = {
-      authData: { hostname: 'localhost:8080', protocol: 'http', api_key: process.env.TEST_GRIST_API_KEY},
+      authData,
       inputData: { team: 'docs', document: process.env.TEST_GRIST_DOC_ID, table: 'Contacts' },
     };
 
-    const results = await appTester(
-      App.triggers['get_is_ready_columns'].operation.perform,
-      bundle
-    );
-    expect(results).toBeDefined();
-    // TODO: add more assertions
+    const results = await appTester(App.triggers['get_is_ready_columns'].operation.perform, bundle);
+    expect(Array.isArray(results)).toBe(true);
+    for (const r of results) {
+      expect(r).toEqual({ id: expect.any(String), name: expect.any(String) });
+    }
+    // Text/Numeric/Date/etc. columns must not appear; we can't easily assert positive without
+    // pinning the fixture, but ensure no Text-only column from the Contacts fixture sneaks in.
+    const ids = results.map((r) => r.id);
+    expect(ids).not.toContain('First_Name');
+    expect(ids).not.toContain('Last_Name');
   });
 });

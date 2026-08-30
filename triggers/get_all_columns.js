@@ -1,38 +1,15 @@
-const {getApiOptions} = require('./util');
+const { colName, isHiddenColumn, fetchColumns } = require('../lib/columns');
 
 const perform = async (z, bundle) => {
-  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`, {
-    method: 'GET',
-    params: {
-      limit: 1,
-    },
-  });
-
-  return z.request(options).then((response) => {
-    response.throwForStatus();
-    const results = response.json;
-
-    // You can do any parsing you need for results here before returning them
-    const ids = results.id;
-    const recs = [];
-    const keys = Object.keys(results).sort();
-    for (const key of keys) {
-      if (
-        key === 'id' ||
-        key === 'manualSort' ||
-        key.startsWith('gristHelper_Display')
-      ) {
-        continue;
-      }
-      recs.push({ id: key, name: key });
-    }
-    return recs;
-  });
+  const columns = await fetchColumns(z, bundle);
+  return columns
+    .filter((col) => !isHiddenColumn(col))
+    .map((col) => ({ id: col.id, name: colName(col) }));
 };
 
 module.exports = {
   operation: {
-    perform: perform,
+    perform,
     inputFields: [
       {
         key: 'team',

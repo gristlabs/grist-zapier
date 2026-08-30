@@ -1,27 +1,35 @@
-const zapier = require('zapier-platform-core');
-
-// Use this to make test calls into your app:
-const App = require('../../index');
-const appTester = zapier.createAppTester(App);
-// read the `.env` file into the environment, if available
-zapier.tools.env.inject();
+const { App, appTester, authData, target, dynamicFields } = require('../helpers');
 
 describe('creates.create_record', () => {
-  it('should run', async () => {
+  it('creates a record and returns its id', async () => {
     const bundle = {
-      authData: { hostname: 'localhost:8080', protocol: 'http', api_key: process.env.TEST_GRIST_API_KEY},
-      inputData: { team: 'docs', document: process.env.TEST_GRIST_DOC_ID, table: 'Contacts',
-        Phone: '555-555-5555',
-        First_Name: 'John',
-        Last_Name: 'Smith',
-      }
+      authData,
+      inputData: { ...target, Phone: '555-555-5555', First_Name: 'John', Last_Name: 'Smith' },
     };
+    const result = await appTester(App.creates['create_record'].operation.perform, bundle);
+    expect(result).toMatchObject({ id: expect.any(Number) });
+    expect(result.id).toBeGreaterThan(0);
+  });
 
-    const results = await appTester(
-      App.creates['create_record'].operation.perform,
-      bundle
-    );
-    expect(results).toBeDefined();
-    // TODO: add more assertions
+  // Zapier merges find_record's `column`/`value` into the bundle when the
+  // search-or-create step falls through to the create.
+  it('creates a record when driven by the search-or-create step', async () => {
+    const bundle = {
+      authData,
+      inputData: { ...target, column: 'Email', value: 'nobody@example.invalid', Phone: '555-555-5555' },
+    };
+    const result = await appTester(App.creates['create_record'].operation.perform, bundle);
+    expect(result).toMatchObject({ id: expect.any(Number) });
+  });
+
+  it('inputFields lists writable columns', async () => {
+    const fn = dynamicFields(App.creates['create_record'].operation);
+    const fields = await appTester(fn, { authData, inputData: target });
+    expect(Array.isArray(fields)).toBe(true);
+    expect(fields).toContainEqual(expect.objectContaining({ key: 'Phone' }));
+    for (const field of fields) {
+      expect(field.key).not.toBe('manualSort');
+      expect(field.key.startsWith('gristHelper_')).toBe(false);
+    }
   });
 });

@@ -1,7 +1,8 @@
-const {getApiOptions} = require('../triggers/util');
+const { flattenRecords } = require('../lib/records');
 
 const perform = async (z, bundle) => {
-  const options = getApiOptions(bundle, `api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/data`, {
+  const response = await z.request({
+    url: `/api/docs/${bundle.inputData.document}/tables/${bundle.inputData.table}/records`,
     method: 'GET',
     params: {
       sort: '-id',
@@ -11,30 +12,12 @@ const perform = async (z, bundle) => {
       }),
     },
   });
-
-  return z.request(options).then((response) => {
-    response.throwForStatus();
-    const results = response.json;
-
-    // You can do any parsing you need for results here before returning them
-    const ids = results.id;
-    const recs = [];
-    const keys = Object.keys(results);
-    for (let i = 0; i < ids.length; i++) {
-      const rec = { id: ids[i] };
-      for (const key of keys) {
-        if (key === 'id' || key === 'manualSort') continue;
-        rec[key] = results[key][i];
-      }
-      recs.push(rec);
-    }
-    return recs;
-  });
+  return flattenRecords(response.data.records);
 };
 
 module.exports = {
   operation: {
-    perform: perform,
+    perform,
     inputFields: [
       {
         key: 'team',
@@ -90,7 +73,7 @@ module.exports = {
   noun: 'Record',
   display: {
     label: 'Find Record',
-    description: 'Finds a Record in a Table',
+    description: 'Finds a record in a table.',
     hidden: false,
   },
 };

@@ -1,24 +1,15 @@
-const {getApiOptions} = require('./util');
-
 const perform = async (z, bundle) => {
-  const options = getApiOptions(bundle, `api/orgs?merged=1`, {
+  const response = await z.request({
+    url: '/api/orgs',
     method: 'GET',
-    params: {},
+    params: { merged: 1 },
   });
-
-  return z.request(options).then((response) => {
-    response.throwForStatus();
-    const results = response.json;
-
-    // You can do any parsing you need for results here before returning them
-
-    return results;
-  });
+  return response.data;
 };
 
 module.exports = {
   operation: {
-    perform: perform,
+    perform,
     outputFields: [
       { key: 'domain', label: 'Team Key', type: 'string' },
       { key: 'name', label: 'Team Name', type: 'string' },
