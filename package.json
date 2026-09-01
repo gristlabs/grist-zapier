@@ -9,7 +9,7 @@
     "validate": "npm run validate:oauth && npm run validate:apikey",
     "validate:oauth": "GRIST_ZAPIER_AUTH=oauth zapier-platform validate",
     "validate:apikey": "GRIST_ZAPIER_AUTH=apikey zapier-platform validate",
-    "push": "node scripts/select-app && zapier-platform push && node scripts/ensure-env",
+    "push": "node scripts/select-app && zapier-platform build && scripts/check-source-zip.sh && zapier-platform upload && node scripts/ensure-env",
     "push:oauth": "GRIST_ZAPIER_AUTH=oauth npm run push",
     "push:apikey": "GRIST_ZAPIER_AUTH=apikey npm run push",
     "zapier-platform:oauth": "GRIST_ZAPIER_AUTH=oauth node scripts/select-app && zapier-platform",
